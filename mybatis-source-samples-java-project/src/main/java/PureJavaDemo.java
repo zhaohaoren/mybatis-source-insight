@@ -42,7 +42,7 @@ public class PureJavaDemo {
 
     public static DataSource getDataSource() {
         Properties properties = new Properties();
-        properties.setProperty("driver", "com.mysql.jdbc.Driver");
+        properties.setProperty("driver", "com.mysql.cj.jdbc.Driver");
         properties.setProperty("url", "jdbc:mysql://127.0.0.1:3306/db_mybatis_source_insight");
         properties.setProperty("username", "root");
         properties.setProperty("password", "root");
