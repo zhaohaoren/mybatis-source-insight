@@ -54,6 +54,8 @@ public class MapperMethod {
     this.method = new MethodSignature(config, mapperInterface, method);
   }
 
+  /* ☆☆☆☆☆ 核心方法，执行sql开始了  ☆☆☆☆☆  */
+  // TODO: 2020/11/10 这里可以获取到每个sql的类型？那拦截不是容易多了
   public Object execute(SqlSession sqlSession, Object[] args) {
     Object result;
     switch (command.getType()) {
@@ -73,17 +75,23 @@ public class MapperMethod {
         break;
       }
       case SELECT:
+        // 主要看看查询
         if (method.returnsVoid() && method.hasResultHandler()) {
           executeWithResultHandler(sqlSession, args);
           result = null;
         } else if (method.returnsMany()) {
+          // 返回多个
           result = executeForMany(sqlSession, args);
         } else if (method.returnsMap()) {
+          // 返回map
           result = executeForMap(sqlSession, args);
         } else if (method.returnsCursor()) {
+          // 返回游标
           result = executeForCursor(sqlSession, args);
         } else {
+          // 其他的selectOne
           Object param = method.convertArgsToSqlCommandParam(args);
+          // 以selectOne为例，继续往下探寻
           result = sqlSession.selectOne(command.getName(), param);
           if (method.returnsOptional()
               && (result == null || !method.getReturnType().equals(result.getClass()))) {
@@ -137,6 +145,7 @@ public class MapperMethod {
     }
   }
 
+  // ☆☆☆☆☆ 这里就可以看出，会判断接口方法的类型，然后将参数传入到 SqlSession那固定的集中查询中去，然后去执行结果
   private <E> Object executeForMany(SqlSession sqlSession, Object[] args) {
     List<E> result;
     Object param = method.convertArgsToSqlCommandParam(args);

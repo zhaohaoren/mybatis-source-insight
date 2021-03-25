@@ -60,7 +60,9 @@ public class SimpleExecutor extends BaseExecutor {
       Configuration configuration = ms.getConfiguration();
       StatementHandler handler = configuration.newStatementHandler(wrapper, ms, parameter, rowBounds, resultHandler, boundSql);
       stmt = prepareStatement(handler, ms.getStatementLog());
+      // 这里往下其实就差不多JDBC的代码了，最终执行完成
       return handler.query(stmt, resultHandler);
+      // TODO: 2021/3/25 梳理下SQL具体怎么绑定的，BoundSql具体怎么生成的，还有结果是怎么解析的
     } finally {
       closeStatement(stmt);
     }

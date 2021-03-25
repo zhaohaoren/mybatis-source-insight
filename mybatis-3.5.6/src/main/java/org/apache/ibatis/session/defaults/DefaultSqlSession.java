@@ -55,9 +55,13 @@ public class DefaultSqlSession implements SqlSession {
   private List<Cursor<?>> cursorList;
 
   public DefaultSqlSession(Configuration configuration, Executor executor, boolean autoCommit) {
+    // 看看一个会话里面有什么？
+    // mybatis的全局配置类
     this.configuration = configuration;
+    // 用于执行sql的
     this.executor = executor;
     this.dirty = false;
+    // 自动提交标识
     this.autoCommit = autoCommit;
   }
 
@@ -72,6 +76,7 @@ public class DefaultSqlSession implements SqlSession {
 
   @Override
   public <T> T selectOne(String statement, Object parameter) {
+    // 实际使用的是selectList
     // Popular vote was to return null on 0 results and throw exception on too many.
     List<T> list = this.selectList(statement, parameter);
     if (list.size() == 1) {
@@ -143,7 +148,9 @@ public class DefaultSqlSession implements SqlSession {
   @Override
   public <E> List<E> selectList(String statement, Object parameter, RowBounds rowBounds) {
     try {
+      // ☆ ☆ ☆ ☆ statement 是方法名字，通过方法名获取到 MappedStatement
       MappedStatement ms = configuration.getMappedStatement(statement);
+      // 下面是重点
       return executor.query(ms, wrapCollection(parameter), rowBounds, Executor.NO_RESULT_HANDLER);
     } catch (Exception e) {
       throw ExceptionFactory.wrapException("Error querying database.  Cause: " + e, e);

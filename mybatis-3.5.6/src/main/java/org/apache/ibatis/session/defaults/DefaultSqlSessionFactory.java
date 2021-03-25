@@ -1,17 +1,17 @@
 /**
- *    Copyright 2009-2020 the original author or authors.
- *
- *    Licensed under the Apache License, Version 2.0 (the "License");
- *    you may not use this file except in compliance with the License.
- *    You may obtain a copy of the License at
- *
- *       http://www.apache.org/licenses/LICENSE-2.0
- *
- *    Unless required by applicable law or agreed to in writing, software
- *    distributed under the License is distributed on an "AS IS" BASIS,
- *    WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- *    See the License for the specific language governing permissions and
- *    limitations under the License.
+ * Copyright 2009-2020 the original author or authors.
+ * <p>
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ * <p>
+ * http://www.apache.org/licenses/LICENSE-2.0
+ * <p>
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
  */
 package org.apache.ibatis.session.defaults;
 
@@ -44,6 +44,7 @@ public class DefaultSqlSessionFactory implements SqlSessionFactory {
 
   @Override
   public SqlSession openSession() {
+    // 默认传入了 ExecutorType.SIMPLE; 隔离级别不指定，自动提交设置为false
     return openSessionFromDataSource(configuration.getDefaultExecutorType(), null, false);
   }
 
@@ -90,10 +91,17 @@ public class DefaultSqlSessionFactory implements SqlSessionFactory {
   private SqlSession openSessionFromDataSource(ExecutorType execType, TransactionIsolationLevel level, boolean autoCommit) {
     Transaction tx = null;
     try {
+      // xml配置的环境
       final Environment environment = configuration.getEnvironment();
+      // 通过配置的环境数据库，来创建事务
       final TransactionFactory transactionFactory = getTransactionFactoryFromEnvironment(environment);
       tx = transactionFactory.newTransaction(environment.getDataSource(), level, autoCommit);
+      // -☆☆- sql的具体执行需要通过Executor来执行， 该对象需要Transaction 和 ExecutorType
+      // TransactionFactory有2个实现类：JdbcTransactionFactory 和 ManagedTransactionFactory
+      // JDBC会使用Connection 对象的 commit()、rollback()、close()来管理事务。
+      // Managed会把事务交给容器来管理,比如 JBOSS,Weblogic。
       final Executor executor = configuration.newExecutor(tx, execType);
+      // -☆☆- 创建一个会话！！！
       return new DefaultSqlSession(configuration, executor, autoCommit);
     } catch (Exception e) {
       closeTransaction(tx); // may have fetched a connection so lets call close()

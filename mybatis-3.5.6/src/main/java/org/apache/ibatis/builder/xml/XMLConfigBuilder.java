@@ -1,25 +1,19 @@
 /**
- *    Copyright 2009-2020 the original author or authors.
- *
- *    Licensed under the Apache License, Version 2.0 (the "License");
- *    you may not use this file except in compliance with the License.
- *    You may obtain a copy of the License at
- *
- *       http://www.apache.org/licenses/LICENSE-2.0
- *
- *    Unless required by applicable law or agreed to in writing, software
- *    distributed under the License is distributed on an "AS IS" BASIS,
- *    WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- *    See the License for the specific language governing permissions and
- *    limitations under the License.
+ * Copyright 2009-2020 the original author or authors.
+ * <p>
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ * <p>
+ * http://www.apache.org/licenses/LICENSE-2.0
+ * <p>
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
  */
 package org.apache.ibatis.builder.xml;
-
-import java.io.InputStream;
-import java.io.Reader;
-import java.util.Properties;
-
-import javax.sql.DataSource;
 
 import org.apache.ibatis.builder.BaseBuilder;
 import org.apache.ibatis.builder.BuilderException;
@@ -39,13 +33,14 @@ import org.apache.ibatis.reflection.MetaClass;
 import org.apache.ibatis.reflection.ReflectorFactory;
 import org.apache.ibatis.reflection.factory.ObjectFactory;
 import org.apache.ibatis.reflection.wrapper.ObjectWrapperFactory;
-import org.apache.ibatis.session.AutoMappingBehavior;
-import org.apache.ibatis.session.AutoMappingUnknownColumnBehavior;
-import org.apache.ibatis.session.Configuration;
-import org.apache.ibatis.session.ExecutorType;
-import org.apache.ibatis.session.LocalCacheScope;
+import org.apache.ibatis.session.*;
 import org.apache.ibatis.transaction.TransactionFactory;
 import org.apache.ibatis.type.JdbcType;
+
+import javax.sql.DataSource;
+import java.io.InputStream;
+import java.io.Reader;
+import java.util.Properties;
 
 /**
  * @author Clinton Begin
@@ -92,31 +87,44 @@ public class XMLConfigBuilder extends BaseBuilder {
   }
 
   public Configuration parse() {
+    /*是否重复解析*/
     if (parsed) {
       throw new BuilderException("Each XMLConfigBuilder can only be used once.");
     }
     parsed = true;
+    /*从根节点configuration开始解析配置*/
     parseConfiguration(parser.evalNode("/configuration"));
     return configuration;
   }
 
+  /**
+   * 解析配置文件XML
+   */
   private void parseConfiguration(XNode root) {
     try {
       // issue #117 read properties first
+      // 解析properties标签，该标签下相当于一些全局变量，一般配置如：数据库的连接等信息
       propertiesElement(root.evalNode("properties"));
+      // 解析setting标签，一些setting级别的配置。详细看https://mybatis.org/mybatis-3/zh/configuration.html#
       Properties settings = settingsAsProperties(root.evalNode("settings"));
       loadCustomVfs(settings);
       loadCustomLogImpl(settings);
+      // -☆- 解析实体别名：（可以指定单个实体，或者指定整个包）
       typeAliasesElement(root.evalNode("typeAliases"));
+      // -☆- 解析插件配置
       pluginElement(root.evalNode("plugins"));
+      // 结果对象创建工厂对象，很少使用
       objectFactoryElement(root.evalNode("objectFactory"));
       objectWrapperFactoryElement(root.evalNode("objectWrapperFactory"));
       reflectorFactoryElement(root.evalNode("reflectorFactory"));
       settingsElement(settings);
       // read it after objectFactory and objectWrapperFactory issue #631
+      // 解析环境配置，比如不同环境下使用不同的配置，如数据源
       environmentsElement(root.evalNode("environments"));
       databaseIdProviderElement(root.evalNode("databaseIdProvider"));
+      // -☆- 解析typeHandler
       typeHandlerElement(root.evalNode("typeHandlers"));
+      // -☆- 指定xml文件的配置，mybatis找到这些xml去获取sql语句
       mapperElement(root.evalNode("mappers"));
     } catch (Exception e) {
       throw new BuilderException("Error parsing SQL Mapper Configuration. Cause: " + e, e);
@@ -145,7 +153,7 @@ public class XMLConfigBuilder extends BaseBuilder {
       for (String clazz : clazzes) {
         if (!clazz.isEmpty()) {
           @SuppressWarnings("unchecked")
-          Class<? extends VFS> vfsImpl = (Class<? extends VFS>)Resources.classForName(clazz);
+          Class<? extends VFS> vfsImpl = (Class<? extends VFS>) Resources.classForName(clazz);
           configuration.setVfsImpl(vfsImpl);
         }
       }
@@ -284,8 +292,8 @@ public class XMLConfigBuilder extends BaseBuilder {
           DataSourceFactory dsFactory = dataSourceElement(child.evalNode("dataSource"));
           DataSource dataSource = dsFactory.getDataSource();
           Environment.Builder environmentBuilder = new Environment.Builder(id)
-              .transactionFactory(txFactory)
-              .dataSource(dataSource);
+            .transactionFactory(txFactory)
+            .dataSource(dataSource);
           configuration.setEnvironment(environmentBuilder.build());
         }
       }
@@ -360,20 +368,27 @@ public class XMLConfigBuilder extends BaseBuilder {
     }
   }
 
+  // 解析出所有的mapper.xml
   private void mapperElement(XNode parent) throws Exception {
     if (parent != null) {
+      // 遍历mapper下所有的配置
       for (XNode child : parent.getChildren()) {
         if ("package".equals(child.getName())) {
           String mapperPackage = child.getStringAttribute("name");
+          // 添加到这个configuration全局配置对象中
           configuration.addMappers(mapperPackage);
         } else {
+          // 如果是直接配置xml文件的方式
           String resource = child.getStringAttribute("resource");
           String url = child.getStringAttribute("url");
           String mapperClass = child.getStringAttribute("class");
           if (resource != null && url == null && mapperClass == null) {
+            // <mapper resource="org/mybatis/builder/AuthorMapper.xml"/> 形式走这里
             ErrorContext.instance().resource(resource);
             InputStream inputStream = Resources.getResourceAsStream(resource);
+            // 读取mapper.xml文件，然后构建XMLMapperBuilder来解析Mapper.xml
             XMLMapperBuilder mapperParser = new XMLMapperBuilder(inputStream, configuration, resource, configuration.getSqlFragments());
+            // -☆- 解析Mapper.xml
             mapperParser.parse();
           } else if (resource == null && url != null && mapperClass == null) {
             ErrorContext.instance().resource(url);

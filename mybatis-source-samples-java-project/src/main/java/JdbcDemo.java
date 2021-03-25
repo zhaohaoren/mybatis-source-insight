@@ -7,7 +7,7 @@ import java.sql.*;
  *
  * @author zhaohaoren
  */
-public class MyJdbcDemo {
+public class JdbcDemo {
 
     /**
      * JDBC driver name and database URL
@@ -23,11 +23,10 @@ public class MyJdbcDemo {
 
     public static void main(String[] args) {
         Connection conn = null;
-        Statement stmt = null;
+        Statement statement = null;
+        //STEP 2: Register JDBC driver JDBC4之后不再需要 @see JDK SPI
+        // Class.forName(JDBC_DRIVER);
         try {
-            //STEP 2: Register JDBC driver
-            Class.forName(JDBC_DRIVER);
-
             //STEP 3: Open a connection
             System.out.println("Connecting to a selected database...");
             conn = DriverManager.getConnection(DB_URL, USER, PASS);
@@ -35,9 +34,17 @@ public class MyJdbcDemo {
 
             //STEP 4: Execute a query
             System.out.println("Creating statement...");
-            stmt = conn.createStatement();
+            statement = conn.createStatement();
+
+            System.out.println(DriverManager.class.getClassLoader());
+            System.out.println(Driver.class.getClassLoader());
+            System.out.println(Connection.class.getClassLoader());
+            System.out.println(conn.getClass().getClassLoader());
+
+            System.out.println(conn.getClass());
+
             String sql = "SELECT * FROM tb_blog";
-            ResultSet rs = stmt.executeQuery(sql);
+            ResultSet rs = statement.executeQuery(sql);
 
             //STEP 5: Extract data from result set
             while (rs.next()) {
@@ -62,7 +69,7 @@ public class MyJdbcDemo {
         } finally {
             //finally block used to close resources
             try {
-                if (stmt != null) {
+                if (statement != null) {
                     conn.close();
                 }
             } catch (SQLException se) {

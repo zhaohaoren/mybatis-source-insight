@@ -32,8 +32,12 @@ public class PureJavaDemo {
 //        }
 
         try (SqlSession session = sqlSessionFactory.openSession()) {
+            // 下面就是拿到mapper
             BlogMapper mapper = session.getMapper(BlogMapper.class);
+            //todo SqlSession 提供了一些查询，但是接口是没法直接用的，这个接口方法，怎么最终调用到sqlsession上的？
             Blog blog = mapper.selectByPrimaryKey(1);
+
+
             System.out.println(blog.toString());
         }
 

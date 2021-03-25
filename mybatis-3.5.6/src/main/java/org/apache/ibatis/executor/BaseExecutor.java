@@ -131,11 +131,16 @@ public abstract class BaseExecutor implements Executor {
 
   @Override
   public <E> List<E> query(MappedStatement ms, Object parameter, RowBounds rowBounds, ResultHandler resultHandler) throws SQLException {
+    // ☆ ☆ ☆ ☆ ☆ ☆  从 BoundSql中获取SQL信息,创建 CacheKey。这个CacheKey就是缓存的Key。
+    // BoundSql 就是sql，这样就完成了 接口是如何绑定到xml上的sql的
     BoundSql boundSql = ms.getBoundSql(parameter);
     CacheKey key = createCacheKey(ms, parameter, rowBounds, boundSql);
+    // 下面就是拿着sql去查了
     return query(ms, parameter, rowBounds, resultHandler, key, boundSql);
   }
 
+
+  /* ☆ ☆ ☆ ☆ ☆ ☆ 执行查询逻辑 */
   @SuppressWarnings("unchecked")
   @Override
   public <E> List<E> query(MappedStatement ms, Object parameter, RowBounds rowBounds, ResultHandler resultHandler, CacheKey key, BoundSql boundSql) throws SQLException {
@@ -143,7 +148,10 @@ public abstract class BaseExecutor implements Executor {
     if (closed) {
       throw new ExecutorException("Executor was closed.");
     }
+    //queryStack 用于记录查询栈，防止递归查询重复处理缓存
+    //flushCache=true 的时候，会先清理本地缓存（一级缓存）
     if (queryStack == 0 && ms.isFlushCacheRequired()) {
+      //清空本地缓存
       clearLocalCache();
     }
     List<E> list;
@@ -153,6 +161,8 @@ public abstract class BaseExecutor implements Executor {
       if (list != null) {
         handleLocallyCachedOutputParameters(ms, key, parameter, boundSql);
       } else {
+        // ☆☆☆☆☆☆☆☆☆☆☆
+        //如果没有缓存,会从数据库查询：queryFromDatabase()
         list = queryFromDatabase(ms, parameter, rowBounds, resultHandler, key, boundSql);
       }
     } finally {
@@ -322,6 +332,7 @@ public abstract class BaseExecutor implements Executor {
     List<E> list;
     localCache.putObject(key, EXECUTION_PLACEHOLDER);
     try {
+      // ☆☆ 执行doQuery，终于要到底了
       list = doQuery(ms, parameter, rowBounds, resultHandler, boundSql);
     } finally {
       localCache.removeObject(key);
