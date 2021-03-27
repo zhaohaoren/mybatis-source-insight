@@ -35,9 +35,13 @@ import org.apache.ibatis.session.Configuration;
  */
 public class BoundSql {
 
+  //完整的 SQL 语句，使用 ？占位
   private final String sql;
+  //参数映射列表
   private final List<ParameterMapping> parameterMappings;
+  //用户传入的参数
   private final Object parameterObject;
+  //附加参数 如datebaseId等
   private final Map<String, Object> additionalParameters;
   private final MetaObject metaParameters;
 

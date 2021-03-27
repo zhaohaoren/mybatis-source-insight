@@ -50,6 +50,7 @@ public class MapperMethod {
   private final MethodSignature method;
 
   public MapperMethod(Class<?> mapperInterface, Method method, Configuration config) {
+    // method 外部调用的时候那个方法
     this.command = new SqlCommand(config, mapperInterface, method);
     this.method = new MethodSignature(config, mapperInterface, method);
   }
@@ -58,9 +59,12 @@ public class MapperMethod {
   // TODO: 2020/11/10 这里可以获取到每个sql的类型？那拦截不是容易多了
   public Object execute(SqlSession sqlSession, Object[] args) {
     Object result;
+    //根据 SQL 类型执行相应的数据库操作
     switch (command.getType()) {
       case INSERT: {
+        // 对用户传入的参数做转换
         Object param = method.convertArgsToSqlCommandParam(args);
+        //rowCountResult处理返回值
         result = rowCountResult(sqlSession.insert(command.getName(), param));
         break;
       }
@@ -230,9 +234,13 @@ public class MapperMethod {
     private final String name;
     private final SqlCommandType type;
 
+    // 传入配置类：需要MappedStatement
+    // 传入接口类：知道执行哪个类的代理类
+    // 传入method：知道需要执行哪个sql
     public SqlCommand(Configuration configuration, Class<?> mapperInterface, Method method) {
       final String methodName = method.getName();
       final Class<?> declaringClass = method.getDeclaringClass();
+      // 从config中获取到MappedStatement
       MappedStatement ms = resolveMappedStatement(mapperInterface, methodName, declaringClass,
           configuration);
       if (ms == null) {
@@ -281,6 +289,7 @@ public class MapperMethod {
     }
   }
 
+  //方法签名-保存了一些和目标方法相关的信息:如目标方法的返回类型，目标方法的参数列表信息。
   public static class MethodSignature {
 
     private final boolean returnsMany;

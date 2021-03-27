@@ -88,6 +88,7 @@ public class XMLMapperBuilder extends BaseBuilder {
       configurationElement(parser.evalNode("/mapper"));
       configuration.addLoadedResource(resource);
       // -☆☆- 将namespace 对应mapper接口扫描并放入config的MapperRegistry中
+      // 解析完Mapper.xml紧接着要和Mapper接口绑定在一起
       bindMapperForNamespace();
     }
     parsePendingResultMaps();
@@ -109,14 +110,17 @@ public class XMLMapperBuilder extends BaseBuilder {
       }
 
       builderAssistant.setCurrentNamespace(namespace);
-      // cache相关的标签配置
+      // cache相关的标签配置-二级缓存
       cacheRefElement(context.evalNode("cache-ref"));
       cacheElement(context.evalNode("cache"));
       // 一些常见的配置
       parameterMapElement(context.evalNodes("/mapper/parameterMap"));
+      // 解析ResultMap节点
       resultMapElements(context.evalNodes("/mapper/resultMap"));
+      // 一个Mapper.xml有多个<sql>所以解析出来的是个list
+      // 解析<sql> 标签节点，预先构建一个sqlFragments map，这些sql就是要被include的那些
       sqlElement(context.evalNodes("/mapper/sql"));
-      // -☆- 解析sql 多个所以解析出来的是个list
+      // -☆- 解析我们写的sql语句的标签，按照类型分为4种：select|insert|update|delete
       buildStatementFromContext(context.evalNodes("select|insert|update|delete"));
     } catch (Exception e) {
       throw new BuilderException("Error parsing Mapper XML. The XML location is '" + resource + "'. Cause: " + e, e);
@@ -138,6 +142,7 @@ public class XMLMapperBuilder extends BaseBuilder {
         // 继续解析sql语句对应的xml标签配置
         statementParser.parseStatementNode();
       } catch (IncompleteElementException e) {
+        // 如果发生异常，将该statementParser放入未完成中
         configuration.addIncompleteStatement(statementParser);
       }
     }
@@ -242,8 +247,10 @@ public class XMLMapperBuilder extends BaseBuilder {
   }
 
   private void resultMapElements(List<XNode> list) {
+    // 遍历 <resultMap> 节点列表
     for (XNode resultMapNode : list) {
       try {
+        // 解析 resultMap 节点
         resultMapElement(resultMapNode);
       } catch (IncompleteElementException e) {
         // ignore, it will be retried
@@ -343,12 +350,14 @@ public class XMLMapperBuilder extends BaseBuilder {
     sqlElement(list, null);
   }
 
+  // 构建 sqlId->Sql的XNode 这样一个Map
   private void sqlElement(List<XNode> list, String requiredDatabaseId) {
     for (XNode context : list) {
       String databaseId = context.getStringAttribute("databaseId");
       String id = context.getStringAttribute("id");
       id = builderAssistant.applyCurrentNamespace(id, false);
       if (databaseIdMatchesCurrent(id, databaseId, requiredDatabaseId)) {
+        // id 是 <sql id=?> 是该Mapper的唯一sql标识，
         sqlFragments.put(id, context);
       }
     }
@@ -417,10 +426,12 @@ public class XMLMapperBuilder extends BaseBuilder {
   }
 
   private void bindMapperForNamespace() {
+    //获取映射文件的命名空间
     String namespace = builderAssistant.getCurrentNamespace();
     if (namespace != null) {
       Class<?> boundType = null;
       try {
+        //根据命名空间解析 mapper 类型
         boundType = Resources.classForName(namespace);
       } catch (ClassNotFoundException e) {
         // ignore, bound type is not required
