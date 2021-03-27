@@ -134,6 +134,7 @@ public abstract class BaseExecutor implements Executor {
     // ☆ ☆ ☆ ☆ ☆ ☆  从 BoundSql中获取SQL信息,创建 CacheKey。这个CacheKey就是缓存的Key。
     // BoundSql 就是sql，这样就完成了 接口是如何绑定到xml上的sql的
     BoundSql boundSql = ms.getBoundSql(parameter);
+    // 创建缓存的key
     CacheKey key = createCacheKey(ms, parameter, rowBounds, boundSql);
     // 下面就是拿着sql去查了
     return query(ms, parameter, rowBounds, resultHandler, key, boundSql);
@@ -157,12 +158,14 @@ public abstract class BaseExecutor implements Executor {
     List<E> list;
     try {
       queryStack++;
+      // localCache是一级缓存，先从该缓存去查，查不到再去数据库里面查
       list = resultHandler == null ? (List<E>) localCache.getObject(key) : null;
       if (list != null) {
         handleLocallyCachedOutputParameters(ms, key, parameter, boundSql);
       } else {
         // ☆☆☆☆☆☆☆☆☆☆☆
         //如果没有缓存,会从数据库查询：queryFromDatabase()
+        // 真正去数据库执行sql获取结果
         list = queryFromDatabase(ms, parameter, rowBounds, resultHandler, key, boundSql);
       }
     } finally {
@@ -207,6 +210,7 @@ public abstract class BaseExecutor implements Executor {
       throw new ExecutorException("Executor was closed.");
     }
     CacheKey cacheKey = new CacheKey();
+    // 可以看到缓存的key是通过这4个东西来确定的
     cacheKey.update(ms.getId());
     cacheKey.update(rowBounds.getOffset());
     cacheKey.update(rowBounds.getLimit());

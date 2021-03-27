@@ -94,6 +94,7 @@ public class CachingExecutor implements Executor {
       throws SQLException {
     Cache cache = ms.getCache();
     if (cache != null) {
+      // 如果二级缓存不为空
       flushCacheIfRequired(ms);
       if (ms.isUseCache() && resultHandler == null) {
         ensureNoOutParams(ms, boundSql);
@@ -106,6 +107,7 @@ public class CachingExecutor implements Executor {
         return list;
       }
     }
+    // 没有设置二级缓存
     return delegate.query(ms, parameterObject, rowBounds, resultHandler, key, boundSql);
   }
 

@@ -175,7 +175,7 @@ public class DefaultResultSetHandler implements ResultSetHandler {
   }
 
   //
-  // HANDLE RESULT SETS
+  // HANDLE RESULT SETS  === 解析ResultSet为我们需要的对象，这是ORM的核心吧
   //
   @Override
   public List<Object> handleResultSets(Statement stmt) throws SQLException {
@@ -184,6 +184,7 @@ public class DefaultResultSetHandler implements ResultSetHandler {
     final List<Object> multipleResults = new ArrayList<>();
 
     int resultSetCount = 0;
+    // ResultSetWrapper 这个就是解析的
     ResultSetWrapper rsw = getFirstResultSet(stmt);
 
     List<ResultMap> resultMaps = mappedStatement.getResultMaps();

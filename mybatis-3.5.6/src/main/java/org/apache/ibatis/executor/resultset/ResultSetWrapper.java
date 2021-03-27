@@ -1,17 +1,17 @@
 /**
- *    Copyright 2009-2020 the original author or authors.
- *
- *    Licensed under the Apache License, Version 2.0 (the "License");
- *    you may not use this file except in compliance with the License.
- *    You may obtain a copy of the License at
- *
- *       http://www.apache.org/licenses/LICENSE-2.0
- *
- *    Unless required by applicable law or agreed to in writing, software
- *    distributed under the License is distributed on an "AS IS" BASIS,
- *    WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- *    See the License for the specific language governing permissions and
- *    limitations under the License.
+ * Copyright 2009-2020 the original author or authors.
+ * <p>
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ * <p>
+ * http://www.apache.org/licenses/LICENSE-2.0
+ * <p>
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
  */
 package org.apache.ibatis.executor.resultset;
 
@@ -37,6 +37,9 @@ import org.apache.ibatis.type.TypeHandlerRegistry;
 import org.apache.ibatis.type.UnknownTypeHandler;
 
 /**
+ * ORM核心：将结果映射到类对象上
+ * mysql或者其他数据库的类型 和 java或其他的语言的类型 是不能匹配的，需要一个翻译官来映射类型之间的关系
+ *
  * @author Iwao AVE!
  */
 public class ResultSetWrapper {
@@ -93,10 +96,8 @@ public class ResultSetWrapper {
    * Tries to get from the TypeHandlerRegistry by searching for the property type.
    * If not found it gets the column JDBC type and tries to get a handler for it.
    *
-   * @param propertyType
-   *          the property type
-   * @param columnName
-   *          the column name
+   * @param propertyType the property type
+   * @param columnName   the column name
    * @return the type handler
    */
   public TypeHandler<?> getTypeHandler(Class<?> propertyType, String columnName) {
