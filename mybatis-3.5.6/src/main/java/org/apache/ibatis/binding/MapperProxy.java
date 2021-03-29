@@ -100,7 +100,7 @@ public class MapperProxy<T> implements InvocationHandler, Serializable {
       // A workaround for https://bugs.openjdk.java.net/browse/JDK-8161372
       // It should be removed once the fix is backported to Java 8 or
       // MyBatis drops Java 8 support. See gh-1929
-      // 判断缓存中是否有这个方法， todo: debug看看这个缓存中存了啥？
+      // 判断缓存中是否有这个方法， todo: debug看看这个缓存中存了啥？缓存：方法全限定名称->MapperMethodInvoker实现类，里面有MapperMethod对象
       MapperMethodInvoker invoker = methodCache.get(method);
       if (invoker != null) {
         return invoker;
@@ -145,6 +145,7 @@ public class MapperProxy<T> implements InvocationHandler, Serializable {
     return lookupConstructor.newInstance(declaringClass, ALLOWED_MODES).unreflectSpecial(method, declaringClass);
   }
 
+  // 调用Mapper接口方法的时候，MapperProxy对方法的代理，代理逻辑看实现类
   interface MapperMethodInvoker {
     Object invoke(Object proxy, Method method, Object[] args, SqlSession sqlSession) throws Throwable;
   }

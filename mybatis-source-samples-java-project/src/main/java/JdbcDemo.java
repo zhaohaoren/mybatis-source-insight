@@ -1,4 +1,4 @@
-import top.zhaohaoren.mybatis.sample.Blog;
+import org.mybatis.sample.Blog;
 
 import java.sql.*;
 
@@ -50,7 +50,7 @@ public class JdbcDemo {
             while (rs.next()) {
 
                 //Retrieve by column name
-                long id = rs.getLong("id");
+                int id = rs.getInt("id");
                 String age = rs.getString("title");
                 String author = rs.getString("author");
                 String content = rs.getString("content");

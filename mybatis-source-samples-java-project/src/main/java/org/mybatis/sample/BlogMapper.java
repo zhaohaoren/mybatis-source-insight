@@ -1,7 +1,6 @@
-package top.zhaohaoren.mybatis.sample;
+package org.mybatis.sample;
 
 import org.apache.ibatis.annotations.Param;
-import org.apache.ibatis.annotations.Select;
 
 /**
  * TbBlogDAO继承基类
@@ -10,6 +9,6 @@ import org.apache.ibatis.annotations.Select;
  */
 public interface BlogMapper {
 
-    @Select("SELECT * FROM tb_blog WHERE id = #{id}")
+//    @Select("SELECT * FROM tb_blog WHERE id = #{id}")
     Blog selectByPrimaryKey(@Param("id") Integer id);
 }

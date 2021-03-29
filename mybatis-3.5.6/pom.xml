@@ -153,7 +153,7 @@
           <groupId>org.javassist</groupId>
         </exclusion>
       </exclusions>
-      <optional>true</optional>
+<!--      <optional>true</optional>-->
     </dependency>
     <dependency>
       <groupId>org.javassist</groupId>

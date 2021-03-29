@@ -45,10 +45,11 @@ import org.apache.ibatis.session.SqlSession;
  * @author Kazuki Shimizu
  */
 public class MapperMethod {
-
+  // 命令模式？
   private final SqlCommand command;
   private final MethodSignature method;
 
+  // 创建MapperMethod的时候，创建SqlCommand Method来确定那个SQL
   public MapperMethod(Class<?> mapperInterface, Method method, Configuration config) {
     // method 外部调用的时候那个方法
     this.command = new SqlCommand(config, mapperInterface, method);
