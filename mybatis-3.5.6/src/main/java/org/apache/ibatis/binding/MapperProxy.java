@@ -82,10 +82,11 @@ public class MapperProxy<T> implements InvocationHandler, Serializable {
   @Override
   public Object invoke(Object proxy, Method method, Object[] args) throws Throwable {
     try {
-      // 判断是否需要去执行SQL还是直接执行方法
+      // 判断是否需要去执行SQL还是直接执行方法，jdk8之后接口有默认方法，这些方法应该不是走sql的，只是提供方法功能的
       if (Object.class.equals(method.getDeclaringClass())) {
         return method.invoke(this, args);
       } else {
+        // 对应sql的那些方法，走这里执行
         // 新版本有所变更
         return cachedInvoker(method).invoke(proxy, method, args, sqlSession);
       }
